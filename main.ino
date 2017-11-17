@@ -1,6 +1,8 @@
 #include <WiFi.h>
 
-#define POWER_SW 5
+#define POWER_SW 22
+#define STATUS_LED 23
+#define ADDRESS 110
 
 const char* ssid     = "";
 const char* password = "";
@@ -9,39 +11,49 @@ WiFiServer server(80);
 
 void setup()
 {
-    Serial.begin(115200);
-    pinMode(POWER_SW, OUTPUT);      // set the LED pin mode
-    digitalWrite(POWER_SW, LOW);
+  Serial.begin(115200);
 
-    delay(10);
+  pinMode(POWER_SW, OUTPUT);
+  pinMode(STATUS_LED, OUTPUT);
 
-    // We start by connecting to a WiFi network
+  digitalWrite(POWER_SW, LOW);
 
-    Serial.println();
-    Serial.println();
-    Serial.print("Connecting to ");
-    Serial.println(ssid);
+  delay(10);
 
-    WiFi.begin(ssid, password);
+  // We start by connecting to a WiFi network
 
-    while (WiFi.status() != WL_CONNECTED) {
-        delay(500);
-        Serial.print(".");
-    }
+  Serial.println();
+  Serial.println();
+  Serial.print("Connecting to ");
+  Serial.println(ssid);
 
-    Serial.println("");
-    Serial.println("WiFi connected.");
-    Serial.println("IP address: ");
-    Serial.println(WiFi.localIP());
-    
-    server.begin();
+  WiFi.begin(ssid, password);
+
+  while (WiFi.status() != WL_CONNECTED) {
+    digitalWrite(STATUS_LED, HIGH);
+    delay(250);
+    digitalWrite(STATUS_LED, LOW);
+    delay(250);
+    Serial.print(WiFi.status());
+  }
+
+  WiFi.config(IPAddress(192,168,1,ADDRESS), WiFi.gatewayIP(), WiFi.subnetMask());
+  
+  Serial.println("");
+  Serial.println("WiFi connected.");
+  Serial.println("IP address: ");
+  Serial.println(WiFi.localIP());
+
+  digitalWrite(STATUS_LED, HIGH);
+
+  server.begin();
 
 }
 
 int value = 0;
 
-void loop(){
- WiFiClient client = server.available();   // listen for incoming clients
+void loop() {
+  WiFiClient client = server.available();   // listen for incoming clients
 
   if (client) {                             // if you get a client,
     Serial.println("New Client.");           // print a message out the serial port
@@ -86,7 +98,7 @@ void loop(){
           digitalWrite(POWER_SW, HIGH);
           delay(5000);
           digitalWrite(POWER_SW, LOW);
-          }
+        }
       }
     }
     // close the connection:
